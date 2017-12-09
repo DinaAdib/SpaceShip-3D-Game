@@ -76,9 +76,9 @@ void computeMatricesFromInputs() {
 	if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS) {
         position += up * deltaTime * speed;
 	}
-    if (glfwGetKey(GLFW_KEY_SPACE) == GLFW_PRESS) {
-        position += direction * deltaTime * speed;
-    }
+	if (glfwGetKey(GLFW_KEY_SPACE) == GLFW_PRESS) {
+	position += direction * deltaTime * speed;
+	}
 	// Move backward
 	if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS) {
         position -= up * deltaTime * speed;
