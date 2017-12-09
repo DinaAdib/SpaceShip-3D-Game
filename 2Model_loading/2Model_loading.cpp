@@ -92,7 +92,7 @@ int main(void)
 
     Spaceship SpaceGhost;
 
-    Buffers BlackHoleBuffers("blackhole2.obj");
+    Buffers BlackHoleBuffers("blackhole.obj");
     BlackHoleBuffers.Create();
     ObjectModel BlackHole("FittedBH.bmp", &BlackHoleBuffers,EndOfGame);
     ObjectModel LightTunnel("Tunnel.bmp", &BlackHoleBuffers,Tunnel);
