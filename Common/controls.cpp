@@ -9,7 +9,7 @@ using namespace std;
 
 #include "controls.hpp"
 float rightFactor;
-float fuel = 2000;
+float fuel = 10000;
 bool fuelRunOut= false;
 glm::mat4 ViewMatrix;
 glm::mat4 ProjectionMatrix;
@@ -29,7 +29,7 @@ glm::vec3 getCameraPosition()
 
 glm::vec3 getSSPosition()
 {
-  //  SSPosition.x = position.x;
+   // SSPosition.x = position.x;
     SSPosition.y = position.y-0.5f;
     SSPosition.z = position.z-3.0f;
     return SSPosition;
