@@ -1,16 +1,20 @@
 // Include GLFW
 #include <GL/glfw.h>
-
+#include <iostream>
 // Include GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 using namespace glm;
+using namespace std;
 
 #include "controls.hpp"
-
+float rightFactor;
+float fuel = 2000;
+bool fuelRunOut= false;
 glm::mat4 ViewMatrix;
 glm::mat4 ProjectionMatrix;
 glm::vec3 position = glm::vec3(0, 0, 5);
+glm::vec3 SSPosition = glm::vec3(0, 0.5, 8);
 glm::mat4 getViewMatrix() {
 	return ViewMatrix;
 }
@@ -23,6 +27,14 @@ glm::vec3 getCameraPosition()
 	return position;
 }
 
+glm::vec3 getSSPosition()
+{
+  //  SSPosition.x = position.x;
+    SSPosition.y = position.y-0.5f;
+    SSPosition.z = position.z-3.0f;
+    return SSPosition;
+}
+
 // Initial horizontal angle : toward -Z
 float horizontalAngle = 3.14f;
 // Initial vertical angle : none
@@ -30,9 +42,10 @@ float verticalAngle = 0.0f;
 // Initial Field of View
 float initialFoV = 45.0f;
 
-float speed = 3.0f; // 3 units / second
+float speed = 40.0f; // 3 units / second
 float mouseSpeed = 0.005f;
-
+bool wasPressed = false;
+float factor = 0.0f;
 
 void computeMatricesFromInputs() {
 
@@ -57,7 +70,7 @@ void computeMatricesFromInputs() {
 
 	// Direction : Spherical coordinates to Cartesian coordinates conversion
 	glm::vec3 direction(
-		cos(verticalAngle) * sin(horizontalAngle),
+        0,
 		sin(verticalAngle),
 		cos(verticalAngle) * cos(horizontalAngle)
 		);
@@ -71,25 +84,49 @@ void computeMatricesFromInputs() {
 
 	// Up vector
 	glm::vec3 up = glm::cross(right, direction);
+    //if was pressed last time, increment and multiply by speed as a range from 0 to 1, else start over.
 
 	// Move forward
 	if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS) {
         position += up * deltaTime * speed;
 	}
-	if (glfwGetKey(GLFW_KEY_SPACE) == GLFW_PRESS) {
-	position += direction * deltaTime * speed;
-	}
+    if (glfwGetKey(GLFW_KEY_SPACE) == GLFW_PRESS) {
+
+        if(wasPressed and factor < 1) {
+            factor+=0.0004;
+        }
+        else if(!wasPressed) factor = 0.0;
+        wasPressed = true;
+        if(!fuelRunOut)
+        position += direction * deltaTime * speed * factor;
+    }
+    if(glfwGetKey(GLFW_KEY_SPACE) != GLFW_PRESS && factor > 0){
+        factor-=0.0001;
+         if(!fuelRunOut)
+        position += direction * deltaTime * speed * factor;
+    }
+
+    fuel-=factor;
+    if(fuel <= 0) {
+        cout<<"run out of fuel";fuelRunOut = true;
+    }
 	// Move backward
 	if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS) {
         position -= up * deltaTime * speed;
 	}
 	// Strafe right
 	if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		position += right * deltaTime * speed;
+        if(rightFactor <= 15){
+            rightFactor += 0.1;
+            SSPosition += right * deltaTime * speed*0.2f;
+        }
 	}
 	// Strafe left
 	if (glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS) {
-		position -= right * deltaTime * speed;
+        if(rightFactor >=-13){
+            rightFactor-=0.1;
+           SSPosition -= right * deltaTime * speed*0.2f;
+        }
 	}
 
 	float FoV = initialFoV - 5 * glfwGetMouseWheel();
