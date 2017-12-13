@@ -179,14 +179,14 @@ int main(void)
 
         /*Mars*/
         computeMatricesFromInputs();
-        glm::mat4 MarsTranslation = translate(mat4(), vec3(-2.0f, 2.0f, -2.0f));
+        glm::mat4 MarsTranslation = translate(mat4(), vec3(-2.0f, 2.0f, -20.0f));
         glm::mat4 MarsModel = MarsTranslation* PlanetsRotation* PlanetsScaling;
         Mars.setModelMatrix(MarsModel);
         Mars.Draw(programID, MatrixID, vertexPosition_modelspaceID, vertexUVID, TextureID);
 
         /*Saturn*/
         computeMatricesFromInputs();
-        glm::mat4 SaturnTranslation = translate(mat4(), vec3(2.0f, 2.0f, -2.0f));
+        glm::mat4 SaturnTranslation = translate(mat4(), vec3(2.0f, 2.0f, -20.0f));
         glm::mat4 SaturnModel = SaturnTranslation* PlanetsRotation* PlanetsScaling;
         Saturn.setModelMatrix(SaturnModel);
         Saturn.Draw(programID, MatrixID, vertexPosition_modelspaceID, vertexUVID, TextureID);
@@ -194,14 +194,14 @@ int main(void)
 
         /*Mercury*/
         computeMatricesFromInputs();
-        glm::mat4 MercuryTranslation = translate(mat4(), vec3(-2.0f, 2.0f, -5.0f));
+        glm::mat4 MercuryTranslation = translate(mat4(), vec3(-2.0f, 2.0f, -60.0f));
         glm::mat4 MercuryModel = MercuryTranslation* PlanetsRotation* PlanetsScaling;
         Mercury.setModelMatrix(MercuryModel);
         Mercury.Draw(programID, MatrixID, vertexPosition_modelspaceID, vertexUVID, TextureID);
 
         /*Venus*/
         computeMatricesFromInputs();
-        glm::mat4 VenusTranslation = translate(mat4(), vec3(2.0f, -2.0f, -3.0f));
+        glm::mat4 VenusTranslation = translate(mat4(), vec3(2.0f, -2.0f, -40.0f));
         glm::mat4 VenusModel = VenusTranslation* PlanetsRotation* PlanetsScaling;
         Venus.setModelMatrix(VenusModel);
         Venus.Draw(programID, MatrixID, vertexPosition_modelspaceID, vertexUVID, TextureID);
@@ -251,7 +251,7 @@ int main(void)
         cout << "Zmax is " << BlackHole.getBoundingBox().Zmax << endl;*/
 
         /*LightTunnel*/
-        glm::mat4 LTunnelTranslation = translate(mat4(), vec3(0.0f, -0.2f, 0.0f));
+        glm::mat4 LTunnelTranslation = translate(mat4(), vec3(0.0f, -0.2f, -100.0f));
         //glm::mat4 LTunnelScaling = scale(mat4(), vec3(0.2, 0.2, 0.2));
         glm::mat4 LTunnelModel = LTunnelTranslation*BlackholeXRotation*BlackholeScaling;
         LightTunnel.setModelMatrix(LTunnelModel);
@@ -259,7 +259,7 @@ int main(void)
 
         /*Meteor*/
 
-        glm::mat4 MeteorTranslation = translate(mat4(), vec3(-5.0f, -5.0f, -5.0f));
+        glm::mat4 MeteorTranslation = translate(mat4(), vec3(-5.0f, -5.0f, -70.0f));
         glm::mat4 MeteorZRotation = eulerAngleZ(orientation);
         glm::mat4 MeteorModel = MeteorTranslation*MeteorZRotation* PlanetsScaling;
         Meteor.setModelMatrix(MeteorModel);
@@ -268,7 +268,7 @@ int main(void)
 
         /*Astroid*/
 
-        glm::mat4 AstroidTranslation = translate(mat4(), vec3(5.0f, 5.0f, 5.0f));
+        glm::mat4 AstroidTranslation = translate(mat4(), vec3(5.0f, 5.0f, 50.0f));
         glm::mat4 AstroidZRotation = eulerAngleZ(orientation);
         glm::mat4 AstroidModel = AstroidTranslation*AstroidZRotation* PlanetsScaling;
         Astroid.setModelMatrix(AstroidModel);
@@ -299,7 +299,7 @@ int main(void)
 
         handleSpaceShipCollision(SpaceGhost, getCameraPosition().x, (getCameraPosition().y - 0.5f), (getCameraPosition().z - 3.0f));
         glm::mat4 SpaceshipScaling = scale(mat4(), vec3(0.25f, 0.25f, 0.5f));
-        glm::mat4 SpaceshipTranslation = translate(mat4(), vec3(getCameraPosition().x, (getCameraPosition().y - 0.5f), (getCameraPosition().z - 3.0f)));
+        glm::mat4 SpaceshipTranslation = translate(mat4(), getSSPosition());
         //SpaceShip.translateObject(getCameraPosition().x, (getCameraPosition().y - 0.5f), (getCameraPosition().z) - 3.0f);
         glm::mat4 SSModel = SpaceshipTranslation*SpaceshipScaling;
         SpaceGhost.setModelMatrix(SSModel);
