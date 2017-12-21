@@ -1,22 +1,21 @@
 #include"Buffers.h"
 
 
-Buffers::Buffers(char name[])
+Buffers::Buffers(char *name)
 {
-	int i = 0;
-	while (name[i] != '\0')
-	{
-		ObjectName[i] = name[i];
-		i++;
-	}
-	ObjectName[i] = '\0';
-	BoundingBox.Xmin = 1000; 
-	BoundingBox.Ymin = 1000;
-	BoundingBox.Zmin = 1000;
-	BoundingBox.Xmax = -1000;
-	BoundingBox.Ymax = -1000;
-	BoundingBox.Zmax = -1000;
-
+    int i = 0;
+    while (name[i] != '\0')
+    {
+        ObjectName[i] = name[i];
+        i++;
+    }
+    ObjectName[i] = '\0';
+    BufferBoundingBox.Xmin = 1000;
+    BufferBoundingBox.Ymin = 1000;
+    BufferBoundingBox.Zmin = 1000;
+    BufferBoundingBox.Xmax = -1000;
+    BufferBoundingBox.Ymax = -1000;
+    BufferBoundingBox.Zmax = -1000;
 }
 
 Buffers::~Buffers()
@@ -24,71 +23,73 @@ Buffers::~Buffers()
 
 GLuint Buffers::getVertexBuffer()
 {
-	return VertexBuffer;
+    return VertexBuffer;
 }
 GLuint Buffers::getUVBuffer()
 {
-	return UVBuffer;
+    return UVBuffer;
 }
 
 GLuint Buffers::getNormalBuffer()
 {
-	return NormalBuffer;
+    return NormalBuffer;
 }
 
 std::vector<glm::vec3>   Buffers::getVerticesVector()
 {
-	return Vertices; 
+    return Vertices;
 }
-
 
 std::vector<glm::vec2>  Buffers::getUVsVector()
 {
-	return Uvs; 
+    return Uvs;
 }
 
 std::vector<glm::vec3>  Buffers::getNormalsVector(){
-	return Normals; 
+    return Normals;
 }
 
 bool Buffers::Create()
 {
-	bool Loading = loadOBJ(ObjectName, Vertices, Uvs, Normals, BoundingBox);
-	// Generate Vertex Buffer 
-	glGenBuffers(1, &VertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, Vertices.size() * sizeof(glm::vec3), &Vertices[0], GL_STATIC_DRAW);
-	// Generate UV Buffer
-	glGenBuffers(1, &UVBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, UVBuffer);
-	glBufferData(GL_ARRAY_BUFFER, Uvs.size() * sizeof(glm::vec2), &Uvs[0], GL_STATIC_DRAW);
-	// Generate Normals Buffer 
-	glGenBuffers(1, &NormalBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, NormalBuffer);
-	glBufferData(GL_ARRAY_BUFFER, Normals.size() * sizeof(glm::vec3), &Normals[0], GL_STATIC_DRAW);
-	return Loading;
+    bool Loading = loadOBJ(ObjectName, Vertices, Uvs, Normals, BufferBoundingBox);
+    // Generate Vertex Buffer
+    glGenBuffers(1, &VertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, Vertices.size() * sizeof(glm::vec3), &Vertices[0], GL_STATIC_DRAW);
+    // Generate UV Buffer
+    glGenBuffers(1, &UVBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, UVBuffer);
+    glBufferData(GL_ARRAY_BUFFER, Uvs.size() * sizeof(glm::vec2), &Uvs[0], GL_STATIC_DRAW);
+    // Generate Normals Buffer
+    glGenBuffers(1, &NormalBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, NormalBuffer);
+    glBufferData(GL_ARRAY_BUFFER, Normals.size() * sizeof(glm::vec3), &Normals[0], GL_STATIC_DRAW);
+    return Loading;
 }
 
-Box& Buffers::getBoundingBox() {
-	return BoundingBox;
-}
-void Buffers::translateBoundingBox(float x, float y, float z)
+Box& Buffers::getBufferBoundingBox()
 {
-	BoundingBox.Xmax += x;
-	BoundingBox.Xmin += x;
-	BoundingBox.Ymax += y;
-	BoundingBox.Ymin += y;
-	BoundingBox.Zmax += z;
-	BoundingBox.Zmin +=z;
-
+    return BufferBoundingBox;
 }
-void Buffers::scaleBoundingBox(float x, float y, float z)
-{
-	BoundingBox.Xmax *= x;
-	BoundingBox.Xmin *= x;
-	BoundingBox.Ymax *= y;
-	BoundingBox.Ymin *= y;
-	BoundingBox.Zmax *= z;
-	BoundingBox.Zmin *= z;
-
-}
+//void Buffers::translateBoundingBox(float x, float y, float z)
+//{
+//	/*
+//	BoundingBox.Xmax += x;
+//	BoundingBox.Xmin += x;
+//	BoundingBox.Ymax += y;
+//	BoundingBox.Ymin += y;
+//	BoundingBox.Zmax += z;
+//	BoundingBox.Zmin +=z;
+//	*/
+//}
+//void Buffers::scaleBoundingBox(float x, float y, float z)
+//{
+//	/*
+//	BoundingBox.Xmax *= x;
+//	BoundingBox.Xmin *= x;
+//	BoundingBox.Ymax *= y;
+//	BoundingBox.Ymin *= y;
+//	BoundingBox.Zmax *= z;
+//	BoundingBox.Zmin *= z;
+//	*/
+//}
