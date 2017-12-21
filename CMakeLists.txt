@@ -50,6 +50,8 @@ add_executable( 1Textures
 	common/shader.hpp
 	common/texture.cpp
 	common/texture.hpp
+	common/text2D.cpp
+	common/text2D.hpp
 )
 target_link_libraries(1Textures
 	${ALL_LIBS}
@@ -77,6 +79,8 @@ add_executable(2Model_loading
 	common/texture.hpp
 	common/objloader.cpp
 	common/objloader.hpp
+	common/text2D.cpp
+	common/text2D.hpp
 )
 target_link_libraries(2Model_loading
 	${ALL_LIBS}
@@ -96,6 +100,8 @@ add_executable(3Lighting
 	common/texture.hpp
 	common/objloader.cpp
 	common/objloader.hpp
+	common/text2D.cpp
+	common/text2D.hpp
 )
 target_link_libraries(3Lighting
 	${ALL_LIBS}
@@ -130,4 +136,5 @@ add_custom_command(
 elseif (${CMAKE_GENERATOR} MATCHES "Xcode" )
 
 endif (NOT ${CMAKE_GENERATOR} MATCHES "Xcode" )
+
 
