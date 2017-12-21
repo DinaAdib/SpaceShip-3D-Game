@@ -13,10 +13,9 @@ void incrementFuel(int amount);
 void decrementFuel();
 int getFuelLeft();
 int getLeftTime();
+void stop();
 void incrementTime(int sec);
 void decrementTime(int sec);
-void speedUp(int sec);
-void speedDown(int amount);
 void EndGame();
 
 #endif

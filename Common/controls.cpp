@@ -7,8 +7,8 @@ using namespace glm;
 using namespace std;
 
 float rightFactor;
-int fuel = 1000000;
-int GameTime = 1200000;
+int fuel = 10000;
+int GameTime = 12000;
 
 bool fuelRunOut = false;
 glm::mat4 ViewMatrix;
@@ -45,7 +45,7 @@ float verticalAngle = 0.0f;
 // Initial Field of View
 float initialFoV = 45.0f;
 
-float horizontalSpeed, verticalSpeed, forwardSpeed = 40.0f; // 3 units / second
+float horizontalSpeed = 6, verticalSpeed = 12, forwardSpeed = 40.0f; // 3 units / second
 float mouseSpeed = 0.005f;
 bool wasPressed = false;
 float factor = 0.0f, tunnelFactor = 1.0f;
@@ -109,7 +109,7 @@ void computeMatricesFromInputs()
         wasPressed = true;
         if (!fuelRunOut)
         {
-            position += direction * deltaTime * speed * factor*tunnelFactor;
+            position += direction * deltaTime * forwardSpeed * factor*tunnelFactor;
         }
     }
     if (glfwGetKey(GLFW_KEY_SPACE) != GLFW_PRESS && factor > 0)
@@ -117,7 +117,7 @@ void computeMatricesFromInputs()
         factor -= 0.0001;
         if (!fuelRunOut)
         {
-            position += direction * deltaTime * speed * factor*tunnelFactor;
+            position += direction * deltaTime * forwardSpeed * factor*tunnelFactor;
         }
     }
 
@@ -129,19 +129,19 @@ void computeMatricesFromInputs()
     // Move Up
     if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
     {
-        position += up * deltaTime * speed*0.4f;
+        position += up * deltaTime * verticalSpeed;
     }
     // Move Down
     if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
     {
-        position -= up * deltaTime * speed*0.4f;
+        position -= up * deltaTime * verticalSpeed;
     }
     // Strafe right
     if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
     {
         if (SSPosition.x <= 1)
         {
-            SSPosition += right * deltaTime * speed*0.2f;
+            SSPosition += right * deltaTime * horizontalSpeed;
         }
     }
     // Strafe left
@@ -149,7 +149,7 @@ void computeMatricesFromInputs()
     {
         if (SSPosition.x >= -1)
         {
-            SSPosition -= right * deltaTime * speed*0.2f;
+            SSPosition -= right * deltaTime * horizontalSpeed;
         }
     }
 
@@ -171,18 +171,14 @@ void computeMatricesFromInputs()
 
 void incrementSpeed(int amount)
 {
-    speed += amount;
+    forwardSpeed += amount;
 }
 void decrementSpeed(int amount)
 {
-    speed -= amount;
+    forwardSpeed -= amount;
 }
-void speedUp(int amount){
-    factor+=amount;
-}
-
-void speedDown(int amount){
-    factor-=amount;
+void stop(){
+    factor = 0;
 }
 
 void incrementFuel(int amount)
