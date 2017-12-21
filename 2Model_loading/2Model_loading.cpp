@@ -194,17 +194,20 @@ int main(void)
         SkySphere.Draw(programID, MatrixID, vertexPosition_modelspaceID, vertexUVID, TextureID);
 
 
-        if(!endofGame){
+        if(!endofGame && getLeftTime()!=0 && getFuelLeft()!=0){
             for (int i = 0; i < nObjects; i++)
             {
                 if(nSpeed>0)
                             {
                                 Objects[i]->translateObject(0, 0, 0.5);
-                                speedDown(0.001);
+                                decrementSpeed(0.0001);
                                 nSpeed--;
                                 printf("\n Current Speed %d", nSpeed);
-                            }
-                else {decrementFuel();}
+                        }
+                else {
+
+                    decrementFuel();
+                }
 
                             int objectZ = Objects[i]->getCenter().z;
                             if (objectZ > getSSPosition().z)
@@ -265,8 +268,7 @@ int main(void)
             }
             else
             {
-                cout << "Game Over" << endl;
-                break;
+                endofGame = true;
             }
             decrementTime(1);
             if (getLeftTime() > 0)
@@ -275,16 +277,11 @@ int main(void)
                 snprintf(currentTime, sizeof(currentTime), "%d", getLeftTime());
                 printText2D(currentTime,130,450, 25);
             }
-            else
-            {
-                endofGame = true;
-                break;
-            }
 
         }
         else {
             char GameOver[256] = "Game Over";
-            printText2D(GameOver,150,300, 50);
+            printText2D(GameOver,150,270, 50);
         }
 
         glDisableVertexAttribArray(vertexPosition_modelspaceID);
@@ -325,7 +322,7 @@ void handleSpaceShipCollision(Spaceship& SS, float dx, float dy, float dz)
                     cout << "Collision with a Light Tunnel" << endl;
                     nSpeed = 1000;
                   //  beep(150, 1000);
-                    speedUp(0.5);
+                    incrementSpeed(1000);
                     break;
 
                 case 3: //Planet or Meteriod => Game Over
@@ -333,7 +330,7 @@ void handleSpaceShipCollision(Spaceship& SS, float dx, float dy, float dz)
                     //Beep(400, 1000);
                     endofGame = true;
                     EndGame();
-
+                break;
                 case 4: //BlackHole => decrease Speed
                     cout << "Collision with a BlackHole" << endl;
                    // beep(200, 1000);
