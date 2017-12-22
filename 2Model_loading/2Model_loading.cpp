@@ -34,7 +34,7 @@ float deltaTime = (float)(currentTime - lastFrameTime);
 char fuelText[256] = "Fuel";
 char timeText[256] = "Time";
 char GameOver[256] = "Game Over";
-state GameState = MENU;
+state GameState = GAMESTARTED;
 
 /*---------Functions' Headers--------*/
 void ObjectLoader(int id , float dx , float dy , float dz, float sx, float sy, float sz, float rx, float ry, float rz);
