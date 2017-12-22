@@ -7,8 +7,8 @@ using namespace glm;
 using namespace std;
 
 float rightFactor;
-int fuel = 10000;
-int GameTime = 12000;
+int fuel = 1000000;
+int GameTime = 1200000;
 
 bool fuelRunOut = false;
 glm::mat4 ViewMatrix;
@@ -62,7 +62,8 @@ void computeMatricesFromInputs()
     float deltaTime = float(currentTime - lastTime);
 
     // Get mouse position
-    if(firstTime){
+    if(firstTime)
+    {
         firstTime = false;
         glfwGetMousePos(&xpos, &ypos);
     }
@@ -100,7 +101,7 @@ void computeMatricesFromInputs()
     {
         if (wasPressed && factor < 1)
         {
-            factor += 0.0004;
+            factor += 0.0002;
         }
         else if (!wasPressed)
         {
@@ -123,7 +124,6 @@ void computeMatricesFromInputs()
 
     if (fuel <= 0)
     {
-        //cout << "run out of fuel";
         fuelRunOut = true;
     }
     // Move Up
@@ -177,7 +177,8 @@ void decrementSpeed(int amount)
 {
     forwardSpeed -= amount;
 }
-void stop(){
+void stop()
+{
     factor = 0;
 }
 
