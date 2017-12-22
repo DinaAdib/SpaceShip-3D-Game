@@ -179,6 +179,7 @@ void decrementSpeed(int amount)
 }
 void stop()
 {
+    forwardSpeed = 40.0f;
     factor = 0;
 }
 
