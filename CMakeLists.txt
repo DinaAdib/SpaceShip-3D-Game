@@ -52,6 +52,8 @@ add_executable( 1Textures
 	common/texture.hpp
 	common/text2D.cpp
 	common/text2D.hpp
+	2Model_loading/Fireworks.cpp
+	2Model_loading/Fireworks.hpp
 )
 target_link_libraries(1Textures
 	${ALL_LIBS}
@@ -71,6 +73,8 @@ add_executable(2Model_loading
 	2Model_loading/Buffers.cpp
 	2Model_loading/Spaceship.h
 	2Model_loading/Spaceship.cpp
+	2Model_loading/Fireworks.cpp
+	2Model_loading/Fireworks.hpp
 	common/shader.cpp
 	common/shader.hpp
 	common/controls.cpp
