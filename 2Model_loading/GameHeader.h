@@ -21,3 +21,9 @@ using namespace glm;
 #include <common/controls.hpp>
 #include <common/objloader.hpp>
 #include <common/text2D.hpp>
+
+enum state{
+    MENU,
+    GAMESTARTED,
+    GAMEENDED
+};
