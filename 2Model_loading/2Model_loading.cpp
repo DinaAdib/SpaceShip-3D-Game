@@ -336,11 +336,9 @@ void handleSpaceShipCollision(Spaceship& SS, float dx, float dy, float dz)
             switch (type) //GAME LOGIC
             {
                 case 1: //FinishLine
-                    cout << "Congratulations" << endl;
                     Won = true;
                     //PlaySound(TEXT("win.wav"), NULL, SND_ASYNC);
                     GameState = GAMEENDED;
-                    //EndGame();
                     break;
 
                 case 2: //LightTunnel => Increase Speed
@@ -348,7 +346,6 @@ void handleSpaceShipCollision(Spaceship& SS, float dx, float dy, float dz)
 
                    // system("aplay laser.wav");
                     //PlaySound(TEXT("laser.wav"), NULL, SND_ASYNC);
-                    //Beep(150, 1000);
                     nSpeed = 1000;
                     inTunnel = true;
                     incrementSpeed(100);
@@ -358,8 +355,8 @@ void handleSpaceShipCollision(Spaceship& SS, float dx, float dy, float dz)
                     cout << "Collision with a Planet" << endl;
                     //PlaySound(TEXT("Lose.wav"), NULL, SND_ASYNC);
                     //cout << Objects[i]->getCenter().x << " " << Objects[i]->getCenter().y << " " << Objects[i]->getCenter().z << " " << Objects[i]->getRadius() << endl;
-                    endofGame = true;
-                    EndGame();
+                    Won = false;
+                    GameState = GAMEENDED;
                 break;
 
                 case 4: //BlackHole => decrease Speed
@@ -377,7 +374,6 @@ void handleSpaceShipCollision(Spaceship& SS, float dx, float dy, float dz)
                     cout << "Collision with a Gift"<< endl;
                    // system("aplay TimeGift.wav");
                     //PlaySound(TEXT("TimeGift.wav"), NULL, SND_ASYNC);
-                    //Beep(1000, 500);
                     incrementTime(5);
                     break;
 
@@ -385,7 +381,6 @@ void handleSpaceShipCollision(Spaceship& SS, float dx, float dy, float dz)
                     cout << "Collision with a Fuel" << endl;
                    // system("aplay Fuel.wav");
                     //PlaySound(TEXT("Fuel.wav"), NULL, SND_ASYNC);
-                    //Beep(1000, 500);
                     incrementFuel(20);
                     break;
 
