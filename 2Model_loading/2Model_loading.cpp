@@ -23,7 +23,7 @@ char*Textures[] = {"Meteroids.bmp","Asteroids.bmp","Saturn.bmp","Mars.bmp","Merc
 char*ObjectNames[]={"Meteroids.obj","Asteroids.obj","Sphere.obj","Sphere.obj","Sphere.obj","Sphere.obj","Sphere.obj","Blackhole.obj","Blackhole.obj","Gift.obj","Fuel.obj","Blackhole.obj"};
 Buffers ObjectBuffers[] = { Buffers("Meteroids.obj") , Buffers("Asteroids.obj") , Buffers("Sphere.obj") , Buffers("Sphere.obj") , Buffers("Sphere.obj"), Buffers("Sphere.obj") , Buffers("Sphere.obj") , Buffers("Blackhole.obj") , Buffers("Blackhole.obj"), Buffers("Gift.obj"), Buffers("Fuel.obj") , Buffers("Blackhole.obj") };
 void handleSpaceShipCollision(Spaceship& SS , float dx , float dy , float dz);
-int nObjects = 0,nSpeed = 0, SSvibration = 0.05,nbFrames = 0, minsRemaining=3, secsRemaining=0;
+int nObjects = 0,nSpeed = 0, SSvibration = 0.05,nbFrames = 0, minsRemaining=5, secsRemaining=0;
 bool endofGame = false, inTunnel = false , Won=false;
 GLuint programID, MatrixID , vertexPosition_modelspaceID, TextureID, ShadersLight;
 // For speed computation
@@ -68,20 +68,20 @@ void SceneReader(char* filename);
 bool initialize();
 void doInitialComputations(ObjectModel &SkySphere, GLuint vertexUVID);
 void play(Spaceship &SpaceGhost, GLuint &vertexUVID);
-void showMenu();
+void showMenu(Spaceship &SpaceGhost,GLuint vertexUVID);
 void drawFireworks();
 void cleanUp();
 void computeRemaining();
-
 
 int main(void)
 {
     // Initialise GLFW
     if(!initialize()) return -1;
 
-    GLuint vertexUVID = glGetAttribLocation(programID, "vertexUV");
 
     Spaceship SpaceGhost;
+    GLuint vertexUVID = glGetAttribLocation(programID, "vertexUV");
+
     ObjectModel SkySphere("Skysphere.bmp", &ObjectBuffers[3], 0);
 
     do
@@ -92,7 +92,7 @@ int main(void)
         {
         case MENU:
             //Draw SkySphere
-            showMenu();
+            showMenu(SpaceGhost,vertexUVID);
 
            // system("aplay Startgame.wav");
             //PlaySound(TEXT("Startgame.wav"), NULL, SND_ASYNC);
@@ -107,15 +107,15 @@ int main(void)
             {
                 //system("aplay win.wav");
                 //PlaySound(TEXT("win.wav"), NULL, SND_ASYNC);
-                printText2D(Congratulations, 150, 270, 30);
-                printText2D(YouWon, 290, 220, 30);
+                printText2D(Congratulations, 150, 270, 30, 0);
+                printText2D(YouWon, 290, 220, 30, 0);
                 //drawFireworks();
             }
             else
             {
                 //system("aplay lose.wav");
                 //PlaySound(TEXT("lose.wav"), NULL, SND_ASYNC);
-                printText2D(GameOver, 150, 270, 50);
+                printText2D(GameOver, 150, 270, 50, 0);
             }
             break;
 
@@ -221,7 +221,7 @@ bool initialize()
     }
 
     SceneReader("Scene1.txt");
-    initText2D( "LCDish.tga" );
+    initText2D( "LCDish.tga", "LogoFont.tga");
 
     return true;
 }
@@ -286,13 +286,29 @@ void ObjectLoader(int id , float dx , float dy , float dz, float sx, float sy, f
     nObjects++;
 }
 
-void showMenu()
+void showMenu(Spaceship &SpaceGhost,GLuint vertexUVID)
 {
 
-    printText2D("Guardians of the Galaxy", 70, 520, 30);
-    printText2D("Choose Mission", 40, 450, 30);
-    printText2D("1- Mission 1: Fuel Crisis Race", 40, 400, 20);
-    printText2D("2- Mission 2: Arrive on Time", 40, 350, 20);
+    printText2D("Guardians of the Galaxy", 20, 450, 32, 1);
+    printText2D("Choose Mission", 40, 350, 30, 1);
+    printText2D("Mission 1: Fuel Crisis Race", 40, 300, 20, 1);
+    printText2D("Mission 2: Arrive on Time", 40, 250, 20, 1);
+
+     glm::mat4 SpaceshipScaling = scale(mat4(), vec3(0.25f, 0.25f, 0.5f));
+    glm::mat4 SpaceshipTranslation = translate(mat4(), vec3(1.0f, -1.0f,1.0f));
+
+    glm::mat4 SpaceshipRotation = eulerAngleYXZ(orientation*0.3f, 0.0f,0.0f);
+
+    glm::mat4 SSModel = SpaceshipTranslation*SpaceshipScaling*SpaceshipRotation;
+    SpaceGhost.setModelMatrix(SSModel);
+
+    SpaceGhost.translateObject(0, -SSvibration, 0);
+      SpaceGhost.LightShader(ShadersLight,MVP_Light_ID,ModelMatrix_Light_ID,ViewMatrix_Light_ID,LightPosition_ID,TextureID_Light,SpaceGhost.getCenter(),Camera_Space_Light_ID);
+    SpaceGhost.Draw(vertexPosition_modelspace_Light_ID,vertexUV_Light_ID,vertexnormal_modelspace_Light_ID,true);
+
+     SpaceGhost.TransformationShader(programID, MatrixID, vertexPosition_modelspaceID, vertexUVID, TextureID);
+     SpaceGhost.Draw(vertexPosition_modelspaceID,vertexUVID,vertexnormal_modelspace_Light_ID,false);
+
     /*
     printText2D("Game Rules: ", 40, 300, 20);
     printText2D("Avoid blackholes, this will slow you down", 40, 250, 12);
@@ -410,7 +426,10 @@ void doInitialComputations(ObjectModel &SkySphere,GLuint vertexUVID)
       //Use our shader
       glUseProgram(programID);
 
-      //Measure speed
+      // Measure speed
+      double currentTime = glfwGetTime();
+      float deltaTime = (float)(currentTime - lastFrameTime)+0.5;
+      lastFrameTime = currentTime;
       lastFrameTime = currentTime;
       nbFrames++;
       if (currentTime - lastTime >= 1.0)
@@ -547,8 +566,8 @@ void play(Spaceship &SpaceGhost, GLuint &vertexUVID)
 
     drawSpaceship(SpaceGhost,vertexUVID);
 
-    if (Mode1) printText2D(fuelText, 10, 500, 25);
-    else printText2D(timeText, 10, 500, 25);
+    if (Mode1) printText2D(fuelText, 10, 500, 25, 0);
+    else printText2D(timeText, 10, 500, 25, 0);
 
     char currentFuel[256], minsRemText[256], secsRemText[256];
     //Displaying score
@@ -556,14 +575,14 @@ void play(Spaceship &SpaceGhost, GLuint &vertexUVID)
     {
        if(Mode1){
            snprintf(currentFuel, sizeof(currentFuel), "%d", getFuelLeft());
-        printText2D(currentFuel,130,500, 25);
+        printText2D(currentFuel,130,500, 25, 0);
        }
     else{
            snprintf(minsRemText, sizeof(minsRemText), "%d", minsRemaining);
-           printText2D(minsRemText,130,500, 25);
-           printText2D(":",150,500, 25);
+           printText2D(minsRemText,130,500, 25, 0);
+           printText2D(":",170,500, 25, 0);
            snprintf(secsRemText, sizeof(secsRemText), "%d", secsRemaining);
-           printText2D(secsRemText,170,500, 25);
+           printText2D(secsRemText,200,500, 25, 0);
 
            computeRemaining();
        }
