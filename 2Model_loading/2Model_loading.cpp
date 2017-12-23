@@ -23,7 +23,7 @@ char*Textures[] = {"Meteroids.bmp","Asteroids.bmp","Saturn.bmp","Mars.bmp","Merc
 char*ObjectNames[]={"Meteroids.obj","Asteroids.obj","Sphere.obj","Sphere.obj","Sphere.obj","Sphere.obj","Sphere.obj","Blackhole.obj","Blackhole.obj","Gift.obj","Fuel.obj","Blackhole.obj"};
 Buffers ObjectBuffers[] = { Buffers("Meteroids.obj") , Buffers("Asteroids.obj") , Buffers("Sphere.obj") , Buffers("Sphere.obj") , Buffers("Sphere.obj"), Buffers("Sphere.obj") , Buffers("Sphere.obj") , Buffers("Blackhole.obj") , Buffers("Blackhole.obj"), Buffers("Gift.obj"), Buffers("Fuel.obj") , Buffers("Blackhole.obj") };
 void handleSpaceShipCollision(Spaceship& SS , float dx , float dy , float dz);
-int nObjects = 0,nSpeed = 0, SSvibration = 0.05,nbFrames = 0, minsRemaining=5, secsRemaining=0;
+int nObjects = 0,nSpeed = 0, SSvibration = 0.05,nbFrames = 0, minsRemaining=3, secsRemaining=0;
 bool endofGame = false, inTunnel = false , Won=false;
 GLuint programID, MatrixID , vertexPosition_modelspaceID, TextureID, ShadersLight;
 // For speed computation

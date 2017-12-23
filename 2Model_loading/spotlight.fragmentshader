@@ -25,7 +25,7 @@ void main(){
 	
 	// Material properties
 	vec3 MaterialDiffuseColor = texture2D( myTextureSampler, UV ).rgb;
-	vec3 MaterialAmbientColor = vec3(0.2,0.2,0.3) * MaterialDiffuseColor;
+	vec3 MaterialAmbientColor = vec3(0.8,0.8,0.8) * MaterialDiffuseColor;
 	vec3 MaterialSpecularColor = vec3(0.1,0.1,0.1);
 
 	// Direction of the light (from the fragment to the light)
