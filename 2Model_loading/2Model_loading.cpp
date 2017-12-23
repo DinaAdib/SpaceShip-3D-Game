@@ -303,6 +303,25 @@ void showMenu()
     }
 }
 
+void incrementTime(int amount){
+    for(int i=0; i<amount; i++){
+        if(secsRemaining == 59){
+            minsRemaining ++;
+            secsRemaining = 0;
+        }
+        else secsRemaining++;
+    }
+}
+void decrementTime(int amount){
+    for(int i=0; i<amount; i++){
+        if(secsRemaining == 0){
+            minsRemaining --;
+            secsRemaining = 59;
+        }
+        else secsRemaining--;
+    }
+}
+
 void handleSpaceShipCollision(Spaceship& SS, float dx, float dy, float dz)
 {
     bool collision;
@@ -351,7 +370,7 @@ void handleSpaceShipCollision(Spaceship& SS, float dx, float dy, float dz)
                     collided = true;
                     collisionTime = 50;
                     decrementSpeed(1);
-                    decrementTime(20);
+                    decrementTime(5);
                     break;
 
                 case 5://Gift => increase Time Left
@@ -359,7 +378,7 @@ void handleSpaceShipCollision(Spaceship& SS, float dx, float dy, float dz)
                    // system("aplay TimeGift.wav");
                     //PlaySound(TEXT("TimeGift.wav"), NULL, SND_ASYNC);
                     //Beep(1000, 500);
-                    incrementTime(20);
+                    incrementTime(5);
                     break;
 
                 case 6://Fuel => increase Fuel
@@ -556,7 +575,6 @@ void play(Spaceship &SpaceGhost, GLuint &vertexUVID)
         GameState = GAMEENDED;
     }
 
-    decrementTime(1);
     return;
 }
 
