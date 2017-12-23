@@ -199,14 +199,6 @@ int getLeftTime()
 {
     return GameTime;
 }
-void incrementTime(int sec)
-{
-    GameTime += sec;
-}
-void decrementTime(int sec)
-{
-    GameTime -= sec;
-}
 void EndGame()
 {
     fuel = 0;
