@@ -10,7 +10,6 @@ float rightFactor;
 int fuel = 10000;
 int GameTime = 1200000;
 
-bool fuelRunOut = false;
 glm::mat4 ViewMatrix;
 glm::mat4 ProjectionMatrix;
 glm::vec3 position = glm::vec3(0, 0, 5);
@@ -108,30 +107,20 @@ void computeMatricesFromInputs()
             factor = 0.0;
         }
         wasPressed = true;
-        if (!fuelRunOut)
-        {
-            position += direction * deltaTime * forwardSpeed * factor*tunnelFactor;
-        }
+            position += direction * deltaTime * forwardSpeed * factor;
     }
     if (glfwGetKey(GLFW_KEY_SPACE) != GLFW_PRESS && factor > 0)
     {
         factor -= 0.0001;
-        if (!fuelRunOut)
-        {
-            position += direction * deltaTime * forwardSpeed * factor*tunnelFactor;
-        }
+            position += direction * deltaTime * forwardSpeed * factor;
     }
 
-    if (fuel <= 0)
-    {
-        fuelRunOut = true;
-    }
     // Move Up
     if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
     {
         if (SSPosition.y <= 1)
         {
-             SSPosition += up * deltaTime * verticalSpeed;
+             position += up * deltaTime * verticalSpeed;
         }
     }
     // Move Down
@@ -139,7 +128,7 @@ void computeMatricesFromInputs()
     {
         if (SSPosition.y >= -1)
         {
-        SSPosition -= up * deltaTime * verticalSpeed;
+            position -= up * deltaTime * verticalSpeed;
         }
     }
     // Strafe right
