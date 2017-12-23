@@ -7,7 +7,7 @@ using namespace glm;
 using namespace std;
 
 float rightFactor;
-int fuel = 1000000;
+int fuel = 10000;
 int GameTime = 1200000;
 
 bool fuelRunOut = false;
@@ -129,12 +129,18 @@ void computeMatricesFromInputs()
     // Move Up
     if (glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
     {
-        position += up * deltaTime * verticalSpeed;
+        if (SSPosition.y <= 1)
+        {
+             SSPosition += up * deltaTime * verticalSpeed;
+        }
     }
     // Move Down
     if (glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
     {
-        position -= up * deltaTime * verticalSpeed;
+        if (SSPosition.y >= -1)
+        {
+        SSPosition -= up * deltaTime * verticalSpeed;
+        }
     }
     // Strafe right
     if (glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
@@ -198,14 +204,6 @@ int getFuelLeft()
 int getLeftTime()
 {
     return GameTime;
-}
-void incrementTime(int sec)
-{
-    GameTime += sec;
-}
-void decrementTime(int sec)
-{
-    GameTime -= sec;
 }
 void EndGame()
 {

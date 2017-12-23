@@ -12,7 +12,7 @@ using namespace glm;
 
 #include "text2D.hpp"
 
-unsigned int Text2DTextureID;              // Texture containing the font
+unsigned int Text2DTextureID[2];              // Texture containing the font
 unsigned int Text2DVertexBufferID;         // Buffer containing the vertices
 unsigned int Text2DUVBufferID;             //                       UVs
 unsigned int Text2DShaderID;               // Program used to disaply the text
@@ -20,11 +20,14 @@ unsigned int vertexPosition_screenspaceID; // Location of the program's "vertexP
 unsigned int vertexUVID;                   // Location of the program's "vertexUV" attribute
 unsigned int Text2DUniformID;              // Location of the program's texture attribute
 
-void initText2D(const char * texturePath){
+void initText2D(const char * texturePath, const char * texturePath2){
 
 	// Initialize texture
-    Text2DTextureID = loadTGA_glfw(texturePath);
+    Text2DTextureID[0] = loadTGA_glfw(texturePath);
+
+    Text2DTextureID[1] = loadTGA_glfw(texturePath2);
 printf("Loading %s\n",texturePath);
+
 	// Initialize VBO
 	glGenBuffers(1, &Text2DVertexBufferID);
 	glGenBuffers(1, &Text2DUVBufferID);
@@ -33,15 +36,15 @@ printf("Loading %s\n",texturePath);
 	Text2DShaderID = LoadShaders( "TextVertexShader.vertexshader", "TextVertexShader.fragmentshader" );
 
 	// Get a handle for our buffers
-	vertexPosition_screenspaceID = glGetAttribLocation(Text2DShaderID, "vertexPosition_screenspace");
-	vertexUVID = glGetAttribLocation(Text2DShaderID, "vertexUV");
+    vertexPosition_screenspaceID = glGetAttribLocation(Text2DShaderID, "vertexPosition_screenspace");
+    vertexUVID = glGetAttribLocation(Text2DShaderID, "vertexUV");
 
 	// Initialize uniforms' IDs
 	Text2DUniformID = glGetUniformLocation( Text2DShaderID, "myTextureSampler" );
 
 }
 //CBFG  y
-void printText2D(const char * text, int x, int y, int size){
+void printText2D(const char * text, int x, int y, int size, int index){
 
 	unsigned int length = strlen(text);
 
@@ -83,7 +86,7 @@ void printText2D(const char * text, int x, int y, int size){
 		UVs.push_back(uv_up_right);
 		UVs.push_back(uv_down_left);
 	}
-	glBindBuffer(GL_ARRAY_BUFFER, Text2DVertexBufferID);
+    glBindBuffer(GL_ARRAY_BUFFER, Text2DVertexBufferID);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec2), &vertices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, Text2DUVBufferID);
 	glBufferData(GL_ARRAY_BUFFER, UVs.size() * sizeof(glm::vec2), &UVs[0], GL_STATIC_DRAW);
@@ -93,7 +96,7 @@ void printText2D(const char * text, int x, int y, int size){
 
 	// Bind texture
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, Text2DTextureID);
+    glBindTexture(GL_TEXTURE_2D, Text2DTextureID[index]);
 	// Set our "myTextureSampler" sampler to user Texture Unit 0
 	glUniform1i(Text2DUniformID, 0);
 
@@ -127,7 +130,7 @@ void cleanupText2D(){
 	glDeleteBuffers(1, &Text2DUVBufferID);
 
 	// Delete texture
-	glDeleteTextures(1, &Text2DTextureID);
+    glDeleteTextures(1, &Text2DTextureID[2]);
 
 	// Delete shader
 	glDeleteProgram(Text2DShaderID);
