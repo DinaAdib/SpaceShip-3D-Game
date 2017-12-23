@@ -8,16 +8,16 @@ struct Point
 };
 class ObjectModel
 {
+protected:
     char TextureName[100];
     GLuint TextureIndex;
     int Type;
-    Buffers* ObjectBuffers;
     glm::mat4 Translation;
     glm::mat4 Scaling;
     glm::mat4 Rotation;
-    glm::mat4 ModelMatrix;
 
-protected:
+    glm::mat4 ModelMatrix;
+    Buffers* ObjectBuffers;
     Box ObjectBoundingBox;
     float xLength = 0, yLength = 0, zLength = 0;
     // Sphere Collision
@@ -42,8 +42,11 @@ public:
     glm::mat4 GetModelRotation();
     glm::mat4 GetModelScaling();
 
-    virtual bool Draw(GLuint programID, GLuint MatrixID, GLuint vertexPosition_modelspaceID, GLuint vertexUVID , GLuint TextureID);
-    virtual bool setModelMatrix(glm::mat4 model);
+
+    virtual bool Draw(GLuint vertexPosition_modelspaceID, GLuint vertexUVID, GLuint vertexNormal_modelspaceID, bool LightShaderUsed);
+    virtual void LightShader(GLuint ShaderLightID, GLuint MatrixID_Light, GLuint ModelMatrixID_Light, GLuint ViewMatrixID_Light, GLuint LightPosition_ID, GLuint TextureID_Light,Point center_ship,GLuint camera_position);
+    virtual void TransformationShader(GLuint programID, GLuint MatrixID, GLuint vertexPosition_modelspaceID, GLuint vertexUVID , GLuint TextureID);
+   virtual bool setModelMatrix(glm::mat4 model);
     virtual void constructModelMatrix(glm::vec3 Translation, glm::vec3 Scaling, glm::vec3 Rotation);
     virtual bool setTexture(char texName[]);
     virtual bool detectCollision(Box bb);

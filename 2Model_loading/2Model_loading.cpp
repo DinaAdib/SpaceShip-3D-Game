@@ -1,35 +1,34 @@
-
 #pragma once
 #include "Spaceship.h"
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <IL/il.h>
-#include <GL/glut.h>
-
-#include <ctime>
-#include <time.h>         // Needed to seed the random number generator
+//#include <IL/il.h>
+//#include <GL/glut.h>
 //#include <Windows.h>
+//#include <mmsystem.h>
 
 using namespace std;
+
 #define FinishLine 1
 #define Tunnel 2
 #define EndOfGame 3
 #define BlackHole 4
 #define Gift 5
 #define Fuel 6
-GLFWimage *x;
+
 /*---------Global Variables--------*/
 vector<ObjectModel*> Objects(200);
 char*Textures[] = {"Meteroids.bmp","Asteroids.bmp","Saturn.bmp","Mars.bmp","Mercury.bmp","Venus.bmp","Earth.bmp","Blackhole.bmp","LightTunnel.bmp", "Gift.bmp","Fuel.bmp","FinishLine.bmp"};
 char*ObjectNames[]={"Meteroids.obj","Asteroids.obj","Sphere.obj","Sphere.obj","Sphere.obj","Sphere.obj","Sphere.obj","Blackhole.obj","Blackhole.obj","Gift.obj","Fuel.obj","Blackhole.obj"};
 Buffers ObjectBuffers[] = { Buffers("Meteroids.obj") , Buffers("Asteroids.obj") , Buffers("Sphere.obj") , Buffers("Sphere.obj") , Buffers("Sphere.obj"), Buffers("Sphere.obj") , Buffers("Sphere.obj") , Buffers("Blackhole.obj") , Buffers("Blackhole.obj"), Buffers("Gift.obj"), Buffers("Fuel.obj") , Buffers("Blackhole.obj") };
 void handleSpaceShipCollision(Spaceship& SS , float dx , float dy , float dz);
-int nObjects = 0,nSpeed = 0, SSvibration = 0.05,nbFrames = 0;
-bool endofGame = false, inTunnel = false, Won = false;
-GLuint programID, MatrixID , vertexPosition_modelspaceID, TextureID;
+int nObjects = 0,nSpeed = 0, SSvibration = 0.05,nbFrames = 0, minsRemaining=3, secsRemaining=5;
+bool endofGame = false, inTunnel = false , Won=false;
+GLuint programID, MatrixID , vertexPosition_modelspaceID, TextureID, ShadersLight;
 // For speed computation
 double lastTime = glfwGetTime();
+double lastSecTime = glfwGetTime();
 double lastFrameTime = lastTime;
 float orientation = 0.0f, orientation_sin = 0.0f, BHorientation = 3.14159f / 2.0f;
 double currentTime = glfwGetTime();
@@ -40,14 +39,29 @@ char GameOver[256] = "Game Over";
 char Congratulations[256] = "Congratulations!";
 char YouWon[256] = "You Won";
 state GameState = MENU;
-GLint windowWidth  = 1024; // Define our window width
-GLint windowHeight = 786; // Define our window height
 const int FIREWORKS = 15; // Number of fireworks
 // Define our buffer settings
-  int	redBits     = 8,   greenBits = 8,    blueBits    = 8;
-  int alphaBits  = 64, depthBits = 24,   stencilBits = 8;
-// Create our array of fireworks
-Firework fw[FIREWORKS];
+int	redBits = 8, greenBits = 8, blueBits = 8;
+int alphaBits = 64, depthBits = 24, stencilBits = 8;
+
+//***********Lighting !
+GLuint MVP_Light_ID;
+GLuint ModelMatrix_Light_ID;
+GLuint ViewMatrix_Light_ID;
+GLuint vertexPosition_modelspace_Light_ID;
+GLuint vertexUV_Light_ID;
+GLuint vertexnormal_modelspace_Light_ID;
+GLuint LightPosition_ID;
+GLuint TextureID_Light;
+GLuint Camera_Space_Light_ID;
+//************
+// Create our array of fireworks--> Not working 3ndi -rana
+//Firework fw[FIREWORKS];
+
+//collision effect variables
+bool collided = false, Mode1 = false;
+int collisionTime = 0;
+
 /*---------Functions' Headers--------*/
 void ObjectLoader(int id , float dx , float dy , float dz, float sx, float sy, float sz, float rx, float ry, float rz);
 void SceneReader(char* filename);
@@ -57,88 +71,54 @@ void play(Spaceship &SpaceGhost, GLuint &vertexUVID);
 void showMenu();
 void drawFireworks();
 void cleanUp();
-bool justEnded = true, Mode1 = false;
-// Function to set some initial OpenGL state-machine properties
-void initGL()
-{
-    glfwSwapInterval(1); // Lock to vertical sync of monitor (normally 60Hz, so 60fps)
-
-    // ----- Window and Projection Settings -----
-
-    // Set the window title
-    glfwSetWindowTitle("GLFW Fireworks with Trails");
-
-    // Setup our viewport to be the entire size of the window
-    glViewport(0, 0, (GLsizei)windowWidth, (GLsizei)windowHeight);
-
-    // Change to the projection matrix, reset the matrix and set up orthagonal projection (i.e. 2D)
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, windowWidth, windowHeight, 0, 0, 1); // Parameters: left, right, bottom, top, near, far
-
-    //  Enable smooth shading (i.e. gouraud shading)
-    glShadeModel(GL_SMOOTH);
-
-    // Set our clear colour to opaque black
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-    // Disable depth testing (because we're working in 2D!)
-    glDisable(GL_DEPTH_TEST);
-
-    // Enable blending (we need this to be able to use an alpha component)
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Set the accumulation buffer clearing colour to opaque black
-    glClearAccum(0.0f, 0.0f, 0.0f, 1.0f);
-
-   // glEnable(GL_POINT_SMOOTH); // Smooth the points so that they're circular and not square
-}
-
+void computeRemaining();
 
 int main(void)
 {
     // Initialise GLFW
     if(!initialize()) return -1;
-glShadeModel( GL_SMOOTH );
-  GLuint vertexUVID = glGetAttribLocation(programID, "vertexUV");
-  Spaceship SpaceGhost;
-  ObjectModel SkySphere("Skysphere.bmp", &ObjectBuffers[3], 0);
 
-      do
+    GLuint vertexUVID = glGetAttribLocation(programID, "vertexUV");
+
+    Spaceship SpaceGhost;
+    ObjectModel SkySphere("Skysphere.bmp", &ObjectBuffers[3], 0);
+
+    do
     {
-      doInitialComputations(SkySphere, vertexUVID);
+        doInitialComputations(SkySphere, vertexUVID);
 
-        switch(GameState) {
+        switch(GameState)
+        {
         case MENU:
             showMenu();
+           // system("aplay Startgame.wav");
+            //PlaySound(TEXT("Startgame.wav"), NULL, SND_ASYNC);
             break;
         case GAMESTARTED:
+           // system("aplay Startgame.wav");
+            //PlaySound(TEXT("Startgame.wav"), NULL, SND_ASYNC);
             play(SpaceGhost, vertexUVID);
             break;
         case GAMEENDED:
-           if(Won){
-               printText2D(Congratulations,150,270, 30);
-               printText2D(YouWon,290,220, 30);
-           }
-           else  printText2D(GameOver,150,270, 50);
-       //    printText2D("Press spacebar to play again", 130,180,20);
-
-           else break;
-              // Clear the screen
-                  // Enable blending (we need this to be able to use an alpha component)
-                  //   glEnable(GL_BLEND);
-                    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                     //glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-
-               drawFireworks();
-
-
+            if (Won)
+            {
+                //system("aplay win.wav");
+                //PlaySound(TEXT("win.wav"), NULL, SND_ASYNC);
+                printText2D(Congratulations, 150, 270, 30);
+                printText2D(YouWon, 290, 220, 30);
+                //drawFireworks();
+            }
+            else
+            {
+                //system("aplay lose.wav");
+                //PlaySound(TEXT("lose.wav"), NULL, SND_ASYNC);
+                printText2D(GameOver, 150, 270, 50);
+            }
             break;
+
         default:
             break;
         }
-
 
         glDisableVertexAttribArray(vertexPosition_modelspaceID);
         glDisableVertexAttribArray(vertexUVID);
@@ -147,34 +127,35 @@ glShadeModel( GL_SMOOTH );
 
     while (glfwGetKey(GLFW_KEY_ESC) != GLFW_PRESS && glfwGetWindowParam(GLFW_OPENED));
 
-    // Cleanup VBO and shader
-   cleanUp();
+    //Cleanup VBO and shader
+    cleanUp();
     return 0;
 }
 
 
 /*---------Functions----------*/
-bool initialize(){
-
-    // Initialise GLFW
+bool initialize()
+{
+    //Initialise GLFW
     if (!glfwInit())
     {
         fprintf(stderr, "Failed to initialize GLFW\n");
         return false;
     }
+
     glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 4);
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 2);
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 1);
 
-    // Open a window and create its OpenGL context
-    if (!glfwOpenWindow(1024, 768,redBits, greenBits, blueBits, alphaBits, depthBits, stencilBits, GLFW_WINDOW))
+    //Open a window and create its OpenGL context
+    if (!glfwOpenWindow(1024, 768, 0, 0, 0, 0, 32, 0, GLFW_WINDOW))
     {
         fprintf(stderr, "Failed to open GLFW window.\n");
         glfwTerminate();
         return false;
     }
 
-    // Initialize GLEW
+    //Initialize GLEW
     if (glewInit() != GLEW_OK)
     {
         fprintf(stderr, "Failed to initialize GLEW\n");
@@ -183,40 +164,60 @@ bool initialize(){
 
     glfwSetWindowTitle("Guardians of the Galaxy");
 
-    // Ensure we can capture the escape key being pressed below
+    //Ensure we can capture the escape key being pressed below
     glfwEnable(GLFW_STICKY_KEYS);
     glfwSetMousePos(1024 / 2, 768 / 2);
 
-    // Dark blue background
-    //glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+    //Dark blue background
+    glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
-    // Enable depth test
+    //Enable depth test
     glEnable(GL_DEPTH_TEST);
-    // Accept fragment if it closer to the camera than the former one
+
+    //Accept fragment if it closer to the camera than the former one
     glDepthFunc(GL_LESS);
 
-    // Cull triangles which normal is not towards the camera
+    //Cull triangles which normal is not towards the camera
     glEnable(GL_CULL_FACE);
 
-
-    // Create and compile our GLSL program from the shaders
+    //Create and compile our GLSL program from the shaders
     programID = LoadShaders("TransformVertexShader.vertexshader", "TextureFragmentShader.fragmentshader");
-    // Get a handle for our "MVP" uniform
+    //Get a handle for our "MVP" uniform
     MatrixID = glGetUniformLocation(programID, "MVP");
 
-    // Get a handle for our buffers
+    //Get a handle for our buffers
     vertexPosition_modelspaceID = glGetAttribLocation(programID, "vertexPosition_modelspace");
 
-
-    // Get a handle for our "myTextureSampler" uniform
+    //Get a handle for our "myTextureSampler" uniform
     TextureID = glGetUniformLocation(programID, "myTextureSampler");
+    //********************** Lighting
+       // Lighting Shaders
+
+   ShadersLight = LoadShaders("StandardShading2.vertexshader", "StandardShading2.fragmentshader");
+    //   ShadersLight = LoadShaders( "StandardShading2.vertexshader", "StandardShading2.fragmentshader" );
+     //  glUseProgram(ShadersLight);
+
+       // getting handles of attribute variables & uniforms
+       MVP_Light_ID = glGetUniformLocation(ShadersLight,"MVP");
+       ModelMatrix_Light_ID = glGetUniformLocation(ShadersLight,"M");
+       ViewMatrix_Light_ID = glGetUniformLocation(ShadersLight,"V");
+
+       vertexPosition_modelspace_Light_ID = glGetAttribLocation(ShadersLight,"vertexPosition_modelspace");
+       vertexUV_Light_ID = glGetAttribLocation(ShadersLight,"vertexUV");
+       vertexnormal_modelspace_Light_ID = glGetAttribLocation(ShadersLight,"vertexNormal_modelspace");
+
+       LightPosition_ID = glGetUniformLocation(ShadersLight,"LightPosition_worldspace");
+       TextureID_Light = glGetUniformLocation(ShadersLight,"myTextureSampler");
+       Camera_Space_Light_ID = glGetUniformLocation(ShadersLight,"camera_position");
+
+       //***********************
+
     for (int j = 0; j < 12; j++)
     {
         ObjectBuffers[j].Create();
     }
 
-
-    SceneReader("Scene.txt");
+    SceneReader("Scene1.txt");
     initText2D( "LCDish.tga" );
 
     return true;
@@ -228,7 +229,7 @@ void SceneReader(char* filename) //Scene.txt
     float dX, dY, dZ;
     float sX, sY, sZ;
     float rX, rY, rZ;
-    string line;
+    //string line;
     ifstream myfile(filename);
     if (myfile.is_open())
     {
@@ -282,18 +283,21 @@ void ObjectLoader(int id , float dx , float dy , float dz, float sx, float sy, f
     nObjects++;
 }
 
-void showMenu(){
-   printText2D("Guardians of the Galaxy", 70,480, 30);
-    printText2D("Choose Mode", 70,400, 30);
-    printText2D("1- Fuel Mode", 70,350, 30);
-    printText2D("2- Time Mode", 70,300, 30);
+void showMenu()
+{
+    printText2D("Guardians of the Galaxy", 70, 480, 30);
+    printText2D("Choose Mode", 70, 400, 30);
+    printText2D("1- Fuel Mode", 70, 350, 30);
+    printText2D("2- Time Mode", 70, 300, 30);
     if (glfwGetKey(49) == GLFW_PRESS)
     {
+        SceneReader("Scene2.txt");
         Mode1 = true;
         GameState = GAMESTARTED;
     }
     else if (glfwGetKey(50) == GLFW_PRESS)
     {
+        SceneReader("Scene1.txt");
         Mode1 = false;
         GameState = GAMESTARTED;
     }
@@ -309,45 +313,59 @@ void handleSpaceShipCollision(Spaceship& SS, float dx, float dy, float dz)
         if (collision)
         {
             int type = Objects[i]->getType();
-            cout << "Collision with " << type << " ";
 
             switch (type) //GAME LOGIC
             {
                 case 1: //FinishLine
-                 //   cout << "Congratulations" << endl;
+                    cout << "Congratulations" << endl;
                     Won = true;
+                    //PlaySound(TEXT("win.wav"), NULL, SND_ASYNC);
                     GameState = GAMEENDED;
+                    //EndGame();
                     break;
 
                 case 2: //LightTunnel => Increase Speed
                     cout << "Collision with a Light Tunnel" << endl;
-                    nSpeed = 1000;
+
+                   // system("aplay laser.wav");
+                    //PlaySound(TEXT("laser.wav"), NULL, SND_ASYNC);
                     //Beep(150, 1000);
+                    nSpeed = 1000;
                     inTunnel = true;
-                    incrementSpeed(1000);
+                    incrementSpeed(100);
                     break;
 
                 case 3: //Planet or Meteriod => Game Over
                     cout << "Collision with a Planet" << endl;
-                    //Beep(400, 1000);
+                    //PlaySound(TEXT("Lose.wav"), NULL, SND_ASYNC);
+                    //cout << Objects[i]->getCenter().x << " " << Objects[i]->getCenter().y << " " << Objects[i]->getCenter().z << " " << Objects[i]->getRadius() << endl;
                     endofGame = true;
                     EndGame();
                 break;
+
                 case 4: //BlackHole => decrease Speed
                     cout << "Collision with a BlackHole" << endl;
-                    //Beep(200, 1000);
+
+                   // system("aplay speed.wav");
+                    //PlaySound(TEXT("speed.wav"), NULL, SND_ASYNC);
+                    collided = true;
+                    collisionTime = 50;
                     decrementSpeed(1);
                     decrementTime(20);
                     break;
 
                 case 5://Gift => increase Time Left
                     cout << "Collision with a Gift"<< endl;
+                   // system("aplay TimeGift.wav");
+                    //PlaySound(TEXT("TimeGift.wav"), NULL, SND_ASYNC);
                     //Beep(1000, 500);
                     incrementTime(20);
                     break;
 
                 case 6://Fuel => increase Fuel
                     cout << "Collision with a Fuel" << endl;
+                   // system("aplay Fuel.wav");
+                    //PlaySound(TEXT("Fuel.wav"), NULL, SND_ASYNC);
                     //Beep(1000, 500);
                     incrementFuel(20);
                     break;
@@ -359,16 +377,15 @@ void handleSpaceShipCollision(Spaceship& SS, float dx, float dy, float dz)
     }
 }
 
-void doInitialComputations(ObjectModel &SkySphere,GLuint vertexUVID){
-
-      // Clear the screen
+void doInitialComputations(ObjectModel &SkySphere,GLuint vertexUVID)
+{
+      //Clear the screen
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      // Use our shader
+      //Use our shader
       glUseProgram(programID);
 
-      // Measure speed
-
+      //Measure speed
       lastFrameTime = currentTime;
       nbFrames++;
       if (currentTime - lastTime >= 1.0)
@@ -379,20 +396,21 @@ void doInitialComputations(ObjectModel &SkySphere,GLuint vertexUVID){
       orientation += 3.14159f / 6.0f * deltaTime;
       orientation_sin = sin(3.14159f / 2.0f * currentTime);
 
+
       //Draw SkySphere
-
-          computeMatricesFromInputs();
-          glm::mat4 SceneScaling = scale(mat4(), vec3(100.0f, 100.0f, 100.0f));
-          glm::mat4 SceneTranslation = translate(mat4(), getCameraPosition());
-          glm::mat4 SceneModel = SceneTranslation* SceneScaling;
-          SkySphere.setModelMatrix(SceneModel);
-          SkySphere.Draw(programID, MatrixID, vertexPosition_modelspaceID, vertexUVID, TextureID);
-
-
+      computeMatricesFromInputs();
+      glm::mat4 SceneScaling = scale(mat4(), vec3(100.0f, 100.0f, 100.0f));
+      glm::mat4 SceneTranslation = translate(mat4(), getCameraPosition());
+      glm::mat4 SceneModel = SceneTranslation* SceneScaling;
+      SkySphere.setModelMatrix(SceneModel);
+      SkySphere.TransformationShader(programID, MatrixID, vertexPosition_modelspaceID, vertexUVID, TextureID);
+      SkySphere.Draw(vertexPosition_modelspaceID,vertexUVID,vertexnormal_modelspace_Light_ID,false);
 }
 
-glm::mat4 determineRotation(ObjectModel* Object){
-     glm::mat4 XYZRotation;
+glm::mat4 determineRotation(ObjectModel* Object)
+
+{
+    glm::mat4 XYZRotation;
     if (Object->getType() == EndOfGame)
     {
         XYZRotation = eulerAngleY(orientation) * eulerAngleZ(orientation);
@@ -416,50 +434,86 @@ glm::mat4 determineRotation(ObjectModel* Object){
     }
     return XYZRotation;
 }
-
-void drawSpaceship(Spaceship &SpaceGhost, GLuint &vertexUVID){
+void drawSpaceship(Spaceship &SpaceGhost, GLuint &vertexUVID)
+{
     glm::mat4 SpaceshipScaling = scale(mat4(), vec3(0.25f, 0.25f, 0.5f));
     glm::mat4 SpaceshipTranslation = translate(mat4(), getSSPosition());
     glm::mat4 SSModel = SpaceshipTranslation*SpaceshipScaling;
     SpaceGhost.setModelMatrix(SSModel);
-    SpaceGhost.Draw(programID, MatrixID, vertexPosition_modelspaceID, vertexUVID, TextureID);
+    if (!collided)
+    {
+        SpaceGhost.LightShader(ShadersLight,MVP_Light_ID,ModelMatrix_Light_ID,ViewMatrix_Light_ID,LightPosition_ID,TextureID_Light,SpaceGhost.getCenter(),Camera_Space_Light_ID);
+        SpaceGhost.Draw(vertexPosition_modelspace_Light_ID,vertexUV_Light_ID,vertexnormal_modelspace_Light_ID,true);
+
+        SpaceGhost.TransformationShader(programID, MatrixID, vertexPosition_modelspaceID, vertexUVID, TextureID);
+        SpaceGhost.Draw(vertexPosition_modelspaceID,vertexUVID,vertexnormal_modelspace_Light_ID,false);
+    }
+    else
+    {
+        //collision effect
+        SpaceGhost.DrawSpaceshipafterCollision(MatrixID, vertexPosition_modelspaceID, vertexUVID);
+        collisionTime--;
+        if (collisionTime < 0) collided = false;
+    }
     return;
 }
 
-void drawObject(ObjectModel* Object, Spaceship &SpaceGhost, GLuint &vertexUVID){
 
+void drawObject(ObjectModel* Object, Spaceship &SpaceGhost, GLuint &vertexUVID)
+{
     if(nSpeed>0)
     {
         Object->translateObject(0, 0, 0.5);
-      //  decrementSpeed(0.0001);
-        if(nSpeed == 1) {
+        //decrementSpeed(0.0001);
+         if(nSpeed == 1){
             stop();
             inTunnel = false;
         }
         nSpeed--;
 
         SpaceGhost.translateObject(0, -SSvibration, 0);
-        printf("\n Current Speed %d", nSpeed);
+        //printf("\n Current Speed %d", nSpeed);
     }
-    if(!inTunnel){
+    if(!inTunnel)
+    {
         decrementFuel();
     }
 
     int objectZ = Object->getCenter().z;
-    if (objectZ > getSSPosition().z)
+    if (objectZ > getSSPosition().z && objectZ + getSSPosition().z > -475) //as we are working in the negative Z part
     {
         float r1 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/2.0);
         float r2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/3.0);
-        Object->translateObject(r1-r2, r2-r1, getSSPosition().z-10);
+        Object->translateObject(r1-r2, r2-r1, getSSPosition().z - 100);
     }
 
     glm::mat4 XYZRotation = determineRotation(Object);
 
     Object->rotateObject(XYZRotation);
-    Object->Draw(programID, MatrixID, vertexPosition_modelspaceID, vertexUVID, TextureID);
+    Object->LightShader(ShadersLight,MVP_Light_ID,ModelMatrix_Light_ID,ViewMatrix_Light_ID,LightPosition_ID,TextureID_Light,SpaceGhost.getCenter(),Camera_Space_Light_ID);
+    Object->Draw(vertexPosition_modelspace_Light_ID,vertexUV_Light_ID,vertexnormal_modelspace_Light_ID,true);
+
+    Object->TransformationShader(programID, MatrixID, vertexPosition_modelspaceID, vertexUVID, TextureID);
+    Object->Draw(vertexPosition_modelspaceID,vertexUVID,vertexnormal_modelspace_Light_ID,false);
+
+}
+void computeRemaining(){
+    double timeNow = glfwGetTime();
+    if (timeNow - lastSecTime >= 1.0) //A second has passed
+    {
+        cout <<"A second has passed"<<endl;
+        lastSecTime = timeNow;
+        if(secsRemaining == 0){
+            minsRemaining --;
+            secsRemaining = 59;
+        }
+        else secsRemaining--;
+    }
+
 }
 
-void play(Spaceship &SpaceGhost, GLuint &vertexUVID){
+void play(Spaceship &SpaceGhost, GLuint &vertexUVID)
+{
     for (int i = 0; i < nObjects; i++)
     {
        drawObject(Objects[i], SpaceGhost, vertexUVID);
@@ -469,24 +523,35 @@ void play(Spaceship &SpaceGhost, GLuint &vertexUVID){
 
     drawSpaceship(SpaceGhost,vertexUVID);
 
-    if(Mode1) printText2D(fuelText,10,500, 25);
-    else printText2D(timeText,10,500, 25);
+    if (Mode1) printText2D(fuelText, 10, 500, 25);
+    else printText2D(timeText, 10, 500, 25);
 
-    char currentFuel[256], currentTime[256];
+    char currentFuel[256], minsRemText[256], secsRemText[256];
     //Displaying score
-    if ((getFuelLeft() > 0 && Mode1) || (getLeftTime() > 0 && !Mode1))
+    if ((getFuelLeft() > 0 && Mode1) || (minsRemaining >= 0 && secsRemaining>= 0 && !Mode1))
     {
        if(Mode1){
            snprintf(currentFuel, sizeof(currentFuel), "%d", getFuelLeft());
         printText2D(currentFuel,130,500, 25);
        }
     else{
-           snprintf(currentTime, sizeof(currentTime), "%d", getLeftTime());
-           printText2D(currentTime,130,500, 25);
+           snprintf(minsRemText, sizeof(minsRemText), "%d", minsRemaining);
+           printText2D(minsRemText,130,500, 25);
+           printText2D(":",150,500, 25);
+           snprintf(secsRemText, sizeof(secsRemText), "%d", secsRemaining);
+           printText2D(secsRemText,170,500, 25);
+
+           computeRemaining();
        }
 
     }
     else{
+        Won = false;
+        GameState = GAMEENDED;
+    }
+    if (getSSPosition().z < -500)
+    {
+        cout << "You Passed the end line" << endl;
         Won = false;
         GameState = GAMEENDED;
     }
@@ -495,106 +560,81 @@ void play(Spaceship &SpaceGhost, GLuint &vertexUVID){
     return;
 }
 
-void drawFireworks(){
-    // Take the contents of the current accumulation buffer and copy it to the colour buffer so that it entirely overwrites it
-    glAccum(GL_RETURN, 1.0f);
-
-    // Clear the accumulation buffer (don't worry, we re-grab the screen into the accumulation buffer after drawing our current frame!)
-    glClear(GL_ACCUM_BUFFER_BIT);
-
-    // Set ModelView matrix mode and reset to the default identity matrix
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-   // The alpha setting for this (the fourth parameter) is what gives us the trails. The lower the value, the longer the trails!
-        glColor4f(0.0f, 0.0f, 0.0f, 0.2f);
-
-        // Draw the background
-        // REMEMBER: Window co-ordinates have the origin at the top left.
-        glBegin(GL_QUADS);
-                glVertex2i(0,           windowHeight);
-                glVertex2i(windowWidth, windowHeight);
-                glVertex2i(windowWidth, 0);
-                glVertex2i(0,           0);
-        glEnd();
-
-
-    // Displacement trick for exact pixelisation
-    glTranslatef(0.375, 0.375, 0);
-
-    // Draw our fireworks
-    for (int loop = 0; loop < FIREWORKS; loop++)
-    {
-        for (int particleLoop = 0; particleLoop < FIREWORK_PARTICLES; particleLoop++)
-        {
-
-            // Set the point size of the firework particles (this needs to be called BEFORE opening the glBegin(GL_POINTS) section!)
-            glPointSize(fw[loop].particleSize);
-
-            glBegin(GL_POINTS);
-                // Set colour to yellow on the way up, then whatever colour firework should be when exploded
-                if (fw[loop].hasExploded == false)
-                {
-                    glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
-                }
-                else
-                {
-                    glColor4f(fw[loop].red, fw[loop].green, fw[loop].blue, fw[loop].alpha);
-                }
-
-                // Draw the point
-                glVertex2f(fw[loop].x[particleLoop], fw[loop].y[particleLoop]);
-            glEnd();
-        }
-
-        // Move the firework appropriately depending on its explosion state
-        if (fw[loop].hasExploded == false)
-        {
-            fw[loop].move();
-        }
-        else
-        {
-            fw[loop].explode();
-        }
-    }
-
-    // ----- Stop Drawing Stuff! ------
-
-    // Take the contents of the current draw buffer and copy it to the accumulation buffer with each pixel modified by a factor
-    // The closer the factor is to 1.0f, the longer the trails... Don't exceed 1.0f - you get garbage!
-    glAccum(GL_ACCUM, 0.5f);
-
-  //  glfwSwapBuffers(); // Swap the buffers to display the scene (so we don't have to watch it being drawn!)
-
-}
-
-void cleanUp(){
+void cleanUp()
+{
     glDeleteProgram(programID);
     glDeleteTextures(1, &TextureID);
     glfwTerminate();
 }
 
-/* Load an image using DevIL and return the devIL handle (-1 if failure) */
-//int LoadImage(char *filename)
+//void drawFireworks()
 //{
-//    ILboolean success;
-//     ILuint image;
-
-//    ilGenImages(1, &image); /* Generation of one image name */
-//     ilBindImage(image); /* Binding of image name */
-//     success = ilLoadImage(filename); /* Loading of the image filename by DevIL */
-
-//    if (success) /* If no error occured: */
-//    {
-//        /* Convert every colour component into unsigned byte. If your image contains alpha channel you can replace IL_RGB with IL_RGBA */
-//           success = ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
-
-//        if (!success)
-//           {
-//                 return -1;
-//           }
-//    }
-//    else
-//        return -1;
-
-//    return image;
+//	// Take the contents of the current accumulation buffer and copy it to the colour buffer so that it entirely overwrites it
+//	glAccum(GL_RETURN, 1.0f);
+//
+//	// Clear the accumulation buffer (don't worry, we re-grab the screen into the accumulation buffer after drawing our current frame!)
+//	glClear(GL_ACCUM_BUFFER_BIT);
+//
+//	// Set ModelView matrix mode and reset to the default identity matrix
+//	glMatrixMode(GL_MODELVIEW);
+//	glLoadIdentity();
+//	// The alpha setting for this (the fourth parameter) is what gives us the trails. The lower the value, the longer the trails!
+//	glColor4f(0.0f, 0.0f, 0.0f, 0.2f);
+//
+//	// Draw the background
+//	// REMEMBER: Window co-ordinates have the origin at the top left.
+//	glBegin(GL_QUADS);
+//	glVertex2i(0, windowHeight);
+//	glVertex2i(windowWidth, windowHeight);
+//	glVertex2i(windowWidth, 0);
+//	glVertex2i(0, 0);
+//	glEnd();
+//
+//
+//	// Displacement trick for exact pixelisation
+//	glTranslatef(0.375, 0.375, 0);
+//
+//	// Draw our fireworks
+//	for (int loop = 0; loop < FIREWORKS; loop++)
+//	{
+//		for (int particleLoop = 0; particleLoop < FIREWORK_PARTICLES; particleLoop++)
+//		{
+//
+//			// Set the point size of the firework particles (this needs to be called BEFORE opening the glBegin(GL_POINTS) section!)
+//			glPointSize(fw[loop].particleSize);
+//
+//			glBegin(GL_POINTS);
+//			// Set colour to yellow on the way up, then whatever colour firework should be when exploded
+//			if (fw[loop].hasExploded == false)
+//			{
+//				glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
+//			}
+//			else
+//			{
+//				glColor4f(fw[loop].red, fw[loop].green, fw[loop].blue, fw[loop].alpha);
+//			}
+//
+//			// Draw the point
+//			glVertex2f(fw[loop].x[particleLoop], fw[loop].y[particleLoop]);
+//			glEnd();
+//		}
+//
+//		// Move the firework appropriately depending on its explosion state
+//		if (fw[loop].hasExploded == false)
+//		{
+//			fw[loop].move();
+//		}
+//		else
+//		{
+//			fw[loop].explode();
+//		}
+//	}
+//
+//	// ----- Stop Drawing Stuff! ------
+//
+//	// Take the contents of the current draw buffer and copy it to the accumulation buffer with each pixel modified by a factor
+//	// The closer the factor is to 1.0f, the longer the trails... Don't exceed 1.0f - you get garbage!
+//	glAccum(GL_ACCUM, 0.5f);
+//
+//	//  glfwSwapBuffers(); // Swap the buffers to display the scene (so we don't have to watch it being drawn!)
 //}

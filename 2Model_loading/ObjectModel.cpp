@@ -71,7 +71,7 @@ ObjectModel::~ObjectModel()
 }
 
 
-bool ObjectModel::Draw(GLuint programID, GLuint MatrixID, GLuint vertexPosition_modelspaceID, GLuint vertexUVID, GLuint TextureID)
+bool ObjectModel::Draw(GLuint vertexPosition_modelspaceID, GLuint vertexUVID, GLuint vertexNormal_modelspaceID,bool LightShaderUsed)
 {
     glEnableVertexAttribArray(vertexPosition_modelspaceID);
     glBindBuffer(GL_ARRAY_BUFFER, ObjectBuffers->getVertexBuffer());
@@ -95,15 +95,64 @@ bool ObjectModel::Draw(GLuint programID, GLuint MatrixID, GLuint vertexPosition_
         0,                            // stride
         (void*)0                      // array buffer offset
     );
+
+    if (LightShaderUsed)
+    {
+        // 3rd attribute buffer : normals
+        glEnableVertexAttribArray(vertexNormal_modelspaceID);
+        glBindBuffer(GL_ARRAY_BUFFER, ObjectBuffers->getNormalBuffer());
+        glVertexAttribPointer(
+                    vertexNormal_modelspaceID,    // The attribute we want to configure
+                    3,                            // size
+                    GL_FLOAT,                     // type
+                    GL_FALSE,                     // normalized?
+                    0,                            // stride
+                    (void*)0                      // array buffer offset
+                    );
+    }
+
+    glDrawArrays(GL_TRIANGLES, 0, ObjectBuffers->getVerticesVector().size());
+
+    return true;
+}
+
+
+void ObjectModel::LightShader(GLuint ShaderLightID, GLuint MatrixID_Light, GLuint ModelMatrixID_Light, GLuint ViewMatrixID_Light, GLuint LightPosition_ID, GLuint TextureID_Light,Point center_ship, GLuint camera_position)
+{
     computeMatricesFromInputs();
+    glUseProgram(ShaderLightID);
+
+    glm::mat4 MVP = getProjectionMatrix() * getViewMatrix() * ModelMatrix;
+
+    glUniformMatrix4fv(MatrixID_Light, 1, GL_FALSE, &MVP[0][0]);
+    glUniformMatrix4fv(ModelMatrixID_Light, 1, GL_FALSE, &ModelMatrix[0][0]);
+    glUniformMatrix4fv(ViewMatrixID_Light, 1, GL_FALSE, &(getViewMatrix())[0][0]);
+
+    glm::vec3 lightPos = glm::vec3(0,20,10);
+    glUniform3f(LightPosition_ID, lightPos.x, lightPos.y, lightPos.z);
+
+    glm::vec3 campos = glm::vec3(getCameraPosition());
+    glUniform3f(camera_position,campos.x,campos.y,campos.z);
+
+    glActiveTexture(GL_TEXTURE11);
+    glBindTexture(GL_TEXTURE_2D, TextureIndex);
+    glUniform1i(TextureID_Light, 11);
+
+}
+
+void ObjectModel::TransformationShader(GLuint programID, GLuint MatrixID, GLuint vertexPosition_modelspaceID, GLuint vertexUVID, GLuint TextureID)
+{
+
     glm::mat4 SSMVP = getProjectionMatrix() * getViewMatrix() * ModelMatrix;
+
+    glUseProgram(programID);
+
     glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &SSMVP[0][0]);
     glActiveTexture(GL_TEXTURE11);
     glBindTexture(GL_TEXTURE_2D, TextureIndex);
     glUniform1i(TextureID, 11);
-    glDrawArrays(GL_TRIANGLES, 0, ObjectBuffers->getVerticesVector().size());
-    return true;
 }
+
 
 bool ObjectModel::setModelMatrix(glm::mat4 model)
 {
@@ -117,7 +166,7 @@ void ObjectModel::constructModelMatrix( glm::vec3 Translation, glm::vec3 Scaling
     this->Scaling = scale(mat4(),Scaling);
     this->Rotation = eulerAngleYXZ(Rotation.y, Rotation.x, Rotation.z);
     this->ModelMatrix = this->Translation*this->Rotation*this->Scaling;
-    // ORDER MATTERS : Scale BoundingBox then translate it ...NEVER THE OPPOSITE
+    //ORDER MATTERS : Scale BoundingBox then translate it ...NEVER THE OPPOSITE
     scaleBoundingBox(Scaling.x, Scaling.y, Scaling.z);
     translateBoundingBox(Translation.x, Translation.y, Translation.z);
 }

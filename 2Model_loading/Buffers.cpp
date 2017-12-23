@@ -71,25 +71,3 @@ Box& Buffers::getBufferBoundingBox()
 {
     return BufferBoundingBox;
 }
-//void Buffers::translateBoundingBox(float x, float y, float z)
-//{
-//	/*
-//	BoundingBox.Xmax += x;
-//	BoundingBox.Xmin += x;
-//	BoundingBox.Ymax += y;
-//	BoundingBox.Ymin += y;
-//	BoundingBox.Zmax += z;
-//	BoundingBox.Zmin +=z;
-//	*/
-//}
-//void Buffers::scaleBoundingBox(float x, float y, float z)
-//{
-//	/*
-//	BoundingBox.Xmax *= x;
-//	BoundingBox.Xmin *= x;
-//	BoundingBox.Ymax *= y;
-//	BoundingBox.Ymin *= y;
-//	BoundingBox.Zmax *= z;
-//	BoundingBox.Zmin *= z;
-//	*/
-//}
