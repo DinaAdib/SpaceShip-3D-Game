@@ -562,7 +562,7 @@ void play(Spaceship &SpaceGhost, GLuint &vertexUVID)
        drawObject(Objects[i], SpaceGhost, vertexUVID);
     }
 
-    handleSpaceShipCollision(SpaceGhost, getSSPosition().x, getSSPosition().y, getSSPosition().z);
+   if(!inTunnel) handleSpaceShipCollision(SpaceGhost, getSSPosition().x, getSSPosition().y, getSSPosition().z);
 
     drawSpaceship(SpaceGhost,vertexUVID);
 
